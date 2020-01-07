@@ -2,10 +2,15 @@
 """
 import texar.tf as tx
 import tensorflow as tf
-from texar.tf.utils import transformer_utils
+# from texar.tf.utils import transformer_utils
 
 
-def build_model(batch, train_data, config_data, config_model):
+def build_model(batch,
+                train_data,
+                config_data,
+                config_model,
+                global_step,
+                learning_rate):
     """创建 Transformer 模型
 
     参数:
@@ -16,7 +21,6 @@ def build_model(batch, train_data, config_data, config_model):
         train_op: 训练运算符
         beam_search_outputs: BeamSearch 结果
     """
-    global_step = tf.Variable(0, dtype=tf.int64, trainable=False)
 
     # 源嵌入
     src_word_embedder = tx.modules.WordEmbedder(
@@ -60,27 +64,31 @@ def build_model(batch, train_data, config_data, config_model):
     outputs = decoder(
         memory=encoder_output,
         memory_sequence_length=batch['source_length'],
-        inputs=tgt_input_embedding,
+        inputs=tgt_input_embedding[:, :-1],
         decoding_strategy='train_greedy',
         mode=tf.estimator.ModeKeys.TRAIN
     )
 
+    # 进行了标签平滑的损失，不清楚标签怎么计算的先不用
     # mle_loss = transformer_utils.smoothing_cross_entropy(
     #     logits=outputs.logits,
     #     labels=batch['target_text_ids'][:, 1:],
     #     vocab_size=train_data.target_vocab.size,
     #     confidence=config_model.loss_label_confidence)
+    # mle_loss = tf.reduce_sum(mle_loss * is_target) / tf.reduce_sum(is_target)
+
     mle_loss = tx.losses.sequence_sparse_softmax_cross_entropy(
         labels=batch['target_text_ids'][:, 1:],
         logits=outputs.logits,
         sequence_length=batch['target_length'] - 1)
 
-    # 不清楚干嘛的先不用
-    # mle_loss = tf.reduce_sum(mle_loss * is_target) / tf.reduce_sum(is_target)
+    tf.summary.scalar('lr', learning_rate)
+    tf.summary.scalar('mle_loss', mle_loss)
+    summary_merged = tf.summary.merge_all()
 
     train_op = tx.core.get_train_op(
         mle_loss,
-        learning_rate=config_model.learning_rate,
+        learning_rate=learning_rate,
         global_step=global_step,
         hparams=config_model.opt)
 
@@ -107,4 +115,4 @@ def build_model(batch, train_data, config_data, config_model):
     # Uses the best sample by beam search
     beam_search_ids = predictions['sample_id'][:, :, 0]
 
-    return train_op, beam_search_ids
+    return train_op, beam_search_ids, mle_loss, summary_merged
