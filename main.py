@@ -42,7 +42,7 @@ def main():
     global_step = tf.Variable(0, dtype=tf.int64, trainable=False)
     learning_rate = tf.placeholder(tf.float64, shape=(), name='lr')
 
-    train_op, beam_search_ids， mle_loss, summary_merged= transformer.build_model(
+    train_op, beam_search_ids, mle_loss, summary_merged = transformer.build_model(
         batch,
         train_data,
         config_data,
@@ -106,21 +106,23 @@ def main():
                 print('saving model to %s' % model_path)
                 saver.save(sess, model_path)
 
-        # elif mode == 'test':
-        #     # For 'test' mode, together with the cmds in README.md, BLEU
-        #     # is evaluated based on text tokens, which is the standard metric.
-        #     fname = os.path.join(FLAGS.model_dir, 'test.output')
-        #     hwords, rwords = [], []
-        #     for hyp, ref in zip(hypos, refs):
-        #         hwords.append([id2w[y] for y in hyp])
-        #         rwords.append([id2w[y] for y in ref])
-        #     hwords = tx.utils.str_join(hwords)
-        #     rwords = tx.utils.str_join(rwords)
-        #     hyp_fn, ref_fn = tx.utils.write_paired_text(
-        #         hwords, rwords, fname, mode='s',
-        #         src_fname_suffix='hyp', tgt_fname_suffix='ref')
-        #     logger.info('Test output writtn to file: %s', hyp_fn)
-        #     print('Test output writtn to file: %s' % hyp_fn)
+        elif mode == 'test':
+            # For 'test' mode, together with the cmds in README.md, BLEU
+            # is evaluated based on text tokens, which is the standard metric.
+            fname = os.path.join(FLAGS.model_dir, 'test.output')
+            hwords, rwords = [], []
+            for hyp, ref in zip(hypotheses, references):
+                hword = train_data.target_vocab.map_ids_to_tokens(hyp)
+                hwords.append(hword)
+                rword = train_data.target_vocab.map_ids_to_tokens(ref)
+                rwords.append(rword)
+            hwords = tx.utils.str_join(hwords)
+            rwords = tx.utils.str_join(rwords)
+            hyp_fn, ref_fn = tx.utils.write_paired_text(
+                hwords, rwords, fname, mode='s',
+                src_fname_suffix='hyp', tgt_fname_suffix='ref')
+            logger.info('Test output writtn to file: %s', hyp_fn)
+            print('Test output writtn to file: %s' % hyp_fn)
 
     def _train_epoch(sess, epoch, step, smry_writer):
         data_iterator.switch_to_train_data(sess)
@@ -144,6 +146,7 @@ def main():
                     smry_writer.add_summary(fetches_['smry'], global_step=step)
                 if step and step % config_data.eval_steps == 0:
                     _eval_epoch(sess, epoch, mode='eval')
+                    _eval_epoch(sess, epoch, mode='test')
             except tf.errors.OutOfRangeError:
                 break
         return step

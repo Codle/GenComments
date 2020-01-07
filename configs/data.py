@@ -28,11 +28,13 @@ valid = {
     'shuffle': False,
     'source_dataset': {
         'files': 'data/processed/val_bpe_title',
-        'vocab_file': source_vocab_file
+        'vocab_file': source_vocab_file,
+        'max_seq_length': 150
     },
     'target_dataset': {
         'files': 'data/processed/val_bpe_comment',
-        'vocab_file': target_vocab_file
+        'vocab_file': target_vocab_file,
+        'max_seq_length': 150
     }
 }
 
@@ -41,10 +43,12 @@ test = {
     'shuffle': False,
     'source_dataset': {
         'files': 'data/processed/test_bpe_title',
-        'vocab_file': source_vocab_file
+        'vocab_file': source_vocab_file,
+        'max_seq_length': 150
     },
     'target_dataset': {
         'files': 'data/processed/test_bpe_comment',
-        'vocab_file': target_vocab_file
+        'vocab_file': target_vocab_file,
+        'max_seq_length': 150
     }
 }
