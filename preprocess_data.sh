@@ -24,7 +24,7 @@
 
 TF=$(pwd)
 
-export PATH=$PATH:$TF/../../bin/utils/
+export PATH=$PATH:$TF/utils/utils/
 encoder=$1
 src_language="title"
 tgt_language="comment"
