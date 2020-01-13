@@ -29,7 +29,7 @@ encoder=$1
 src_language="title"
 tgt_language="comment"
 vocab_size=${4:-32000}
-max_seq_length=${5:-70}
+max_seq_length=${5:-150}
 
 # update these variables
 data=${TF}"/data/processed"
