@@ -15,6 +15,7 @@
 # Modifications copyright (C) 2018 Texar
 # ==============================================================================
 """BLEU metric utililities used for MT eval.
+
 Usage: python bleu_tool.py --translation=my-wmt13.de --reference=wmt13_deen.de
 """
 # This also:
@@ -47,10 +48,12 @@ from six.moves import zip
 
 def _get_ngrams(segment, max_order):
     """Extracts all n-grams upto a given maximum order from an input segment.
+
   Args:
     segment: text segment from which n-grams will be extracted.
     max_order: maximum length in tokens of the n-grams returned by this
         methods.
+
   Returns:
     The Counter containing all n-grams upto max_order in segment
     with a count of how many times each n-gram occurred.
@@ -68,6 +71,7 @@ def compute_bleu(reference_corpus,
                  max_order=4,
                  use_bp=True):
     """Computes BLEU score of translated segments against references.
+
     Args:
         reference_corpus: list of references for each translation. Each
             reference should be tokenized into a list of tokens.
@@ -154,6 +158,7 @@ uregex = UnicodeRegex()
 
 def bleu_tokenize(string):
     r"""Tokenize a string following the official BLEU implementation.
+
   See https://github.com/moses-smt/mosesdecoder/"
            "blob/master/scripts/generic/mteval-v14.pl#L954-L983
   In our case, the input string is expected to be just one line
@@ -161,14 +166,17 @@ def bleu_tokenize(string):
   So we just tokenize on punctuation and symbols,
   except when a punctuation is preceded and followed by a digit
   (e.g. a comma/dot as a thousand/decimal separator).
+
   Note that a numer (e.g. a year) followed by a dot at the end of sentence
   is NOT tokenized,
   i.e. the dot stays with the number because `s/(\p{P})(\P{N})/ $1 $2/g`
   does not match this case (unless we add a space after each sentence).
   However, this error is already in the original mteval-v14.pl
   and we want to be consistent with it.
+
   Args:
     string: the input string
+
   Returns:
     a list of tokens
   """
